@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
+import { useAuth } from './AuthContext';
 
 const NotificationsContext = createContext({ count: 0, refresh: () => {} });
 
@@ -15,22 +16,35 @@ const NotificationsContext = createContext({ count: 0, refresh: () => {} });
 export function NotificationsProvider({ children }) {
   const [count, setCount] = useState(0);
   const timerRef = useRef(null);
+  const { user } = useAuth();
 
   const refresh = useCallback(async () => {
+    if (!user) {
+      setCount(0);
+      return;
+    }
     try {
       const data = await api.get('/notifications/unread-count');
       setCount(Number(data?.unread ?? 0));
     } catch {
       // ignore fetch errors – badge count is non-critical
     }
-  }, []);
+  }, [user]);
 
   // Polling fallback every 30 s.
   useEffect(() => {
+    if (!user) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setCount(0);
+      return undefined;
+    }
     refresh();
     timerRef.current = setInterval(refresh, 30_000);
     return () => clearInterval(timerRef.current);
-  }, [refresh]);
+  }, [refresh, user]);
 
   // Refresh when the window regains focus (e.g. user switches back from Notifications page).
   useEffect(() => {
