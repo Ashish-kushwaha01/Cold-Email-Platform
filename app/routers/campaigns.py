@@ -1676,12 +1676,28 @@ async def send_test_email(
 
     # Get Gmail account if needed
     gmail_account = None
+    # if getattr(inbox, "provider", "") == "gmail":
+    #     from app.models import GmailAccount
+    #     ga_result = await db.execute(
+    #         select(GmailAccount).where(GmailAccount.email == inbox.email)
+    #     )
+    #     gmail_account = ga_result.scalar_one_or_none()
+    
     if getattr(inbox, "provider", "") == "gmail":
         from app.models import GmailAccount
+
         ga_result = await db.execute(
-            select(GmailAccount).where(GmailAccount.email == inbox.email)
+            select(GmailAccount).where(
+                GmailAccount.inbox_id == inbox.id
+            )
         )
         gmail_account = ga_result.scalar_one_or_none()
+
+    if not gmail_account:
+        raise HTTPException(
+            400,
+            "No Gmail OAuth account is linked to this inbox"
+        )
 
     from app.sender import send_email
 
