@@ -953,7 +953,8 @@ async def send_slot_job(slot_id: int) -> None:
     """
     global last_send_job_run, last_send_job_sent_count
 
-    now = time_provider.now()
+    # now = time_provider.now()
+    now = time_provider.utcnow()
     log.info("send_slot_job: slot_id=%d firing at %s", slot_id, now.isoformat())
 
     async with AsyncSessionLocal() as session:
@@ -1633,7 +1634,8 @@ async def run_slot_scan_job() -> None:
     ``_pending_slot_ids`` prevents double-dispatch when two scan ticks see the
     same slot inside their overlapping 60-second windows.
     """
-    now = time_provider.now()
+    # now = time_provider.now()
+    now = time_provider.utcnow()
     window_end = now + timedelta(seconds=60)
 
     async with AsyncSessionLocal() as session:

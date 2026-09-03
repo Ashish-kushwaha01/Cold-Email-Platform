@@ -265,7 +265,8 @@ async def api_status(request: Request, user=Depends(_auth_dep)):
     """Schedule and send-job status so you can verify the worker is running."""
     import os
     schedule = getattr(request.app.state, "schedule", None)
-    job = schedule.get_job("send_queue") if (schedule and schedule.running) else None
+    # job = schedule.get_job("send_queue") if (schedule and schedule.running) else None
+    job = schedule.get_job("slot_scan") if (schedule and schedule.running) else None
     next_run = job.next_run_time.isoformat() if (job and getattr(job, "next_run_time", None)) else None
     return {
         "schedule_running": schedule is not None and schedule.running,
